@@ -208,4 +208,19 @@ class SyncTest extends TestCase
             ->assertJsonPath('videos.0.normal_price', 'VISIBLE-NORMAL')
             ->assertJsonPath('videos.0.wholesale_price', null);
     }
+
+    public function test_sales_sync_receives_both_prices(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => 'sales']));
+        $video = Video::factory()->create([
+            'normal_price' => 'NORMAL',
+            'wholesale_price' => 'WHOLESALE',
+        ]);
+
+        $this->getJson('/api/sync/bootstrap?after_video_id=0')
+            ->assertOk()
+            ->assertJsonPath('videos.0.id', $video->id)
+            ->assertJsonPath('videos.0.normal_price', 'NORMAL')
+            ->assertJsonPath('videos.0.wholesale_price', 'WHOLESALE');
+    }
 }

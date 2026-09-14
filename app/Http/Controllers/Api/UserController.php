@@ -39,11 +39,13 @@ class UserController extends Controller
         if ($data['role'] === 'user' && $data['normal_price_access'] === $data['wholesale_price_access']) {
             return response()->json(['message' => 'Pengguna harus memiliki tepat satu akses harga: Normal atau Grosir.'], 422);
         }
+        $data = $this->normalizeAccess($data);
         $user = User::create([
             ...$data,
             'email' => $data['username'].'-'.Str::uuid().'@mega.local',
             'normal_price_access' => $data['normal_price_access'] ?? true,
             'wholesale_price_access' => $data['wholesale_price_access'] ?? false,
+            'offline_auth_version' => 1,
         ]);
 
         $payload = $user->apiData();
@@ -62,7 +64,10 @@ class UserController extends Controller
         }
         if (blank($data['password'] ?? null)) {
             unset($data['password']);
+        } else {
+            $data['offline_auth_version'] = $user->offline_auth_version + 1;
         }
+        $data = $this->normalizeAccess($data);
         $user->update($data);
         $user = $user->fresh();
         $payload = $user->apiData();
@@ -90,9 +95,19 @@ class UserController extends Controller
                 Rule::unique('users')->ignore($user?->id)->whereNull('deleted_at'),
             ],
             'password' => [$user ? 'nullable' : 'required', 'string', 'min:6'],
-            'role' => ['required', Rule::in(['admin', 'user'])],
+            'role' => ['required', Rule::in(['admin', 'sales', 'user'])],
             'normal_price_access' => ['required', 'boolean'],
             'wholesale_price_access' => ['required', 'boolean'],
         ]);
+    }
+
+    private function normalizeAccess(array $data): array
+    {
+        if (in_array($data['role'], ['admin', 'sales'], true)) {
+            $data['normal_price_access'] = true;
+            $data['wholesale_price_access'] = true;
+        }
+
+        return $data;
     }
 }

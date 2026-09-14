@@ -20,8 +20,9 @@ final class SyncPayload
 
     public static function video(Video $video, ?User $viewer = null): array
     {
-        $canViewNormal = ! $viewer || $viewer->isAdmin() || $viewer->normal_price_access;
-        $canViewWholesale = ! $viewer || $viewer->isAdmin() || $viewer->wholesale_price_access;
+        $access = $viewer?->priceAccess();
+        $canViewNormal = ! $viewer || $access['normal_price_access'];
+        $canViewWholesale = ! $viewer || $access['wholesale_price_access'];
 
         return [
             'id' => $video->id,

@@ -102,6 +102,30 @@ class SharedCatalogTest extends TestCase
         $this->getJson("/s/{$token}/videos")->assertGone();
     }
 
+    public function test_sales_must_choose_an_authorized_share_price(): void
+    {
+        $sales = User::factory()->create(['role' => 'sales']);
+        Sanctum::actingAs($sales);
+
+        $this->postJson('/api/catalog-shares', [])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Pilih harga Normal atau Grosir untuk link katalog.');
+
+        $this->postJson('/api/catalog-shares', ['price_type' => 'wholesale'])
+            ->assertCreated()
+            ->assertJsonPath('price_type', 'wholesale');
+
+        $normalUser = User::factory()->create([
+            'role' => 'user',
+            'normal_price_access' => true,
+            'wholesale_price_access' => false,
+        ]);
+        Sanctum::actingAs($normalUser);
+        $this->postJson('/api/catalog-shares', ['price_type' => 'wholesale'])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Anda tidak memiliki akses ke harga yang dipilih.');
+    }
+
     public function test_all_category_share_allows_category_navigation_but_keeps_search_scope(): void
     {
         $user = User::factory()->create();

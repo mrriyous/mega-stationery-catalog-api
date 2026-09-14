@@ -16,9 +16,22 @@ class CatalogShareController extends Controller
         $data = $request->validate([
             'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')->whereNull('deleted_at')],
             'search' => ['nullable', 'string', 'max:255'],
+            'price_type' => ['nullable', Rule::in(['normal', 'wholesale'])],
         ]);
         $user = $request->user();
-        $priceType = $user->wholesale_price_access && ! $user->normal_price_access ? 'wholesale' : 'normal';
+        $access = $user->priceAccess();
+        $availablePrices = array_keys(array_filter([
+            'normal' => $access['normal_price_access'],
+            'wholesale' => $access['wholesale_price_access'],
+        ]));
+        $priceType = $data['price_type'] ?? null;
+        if (count($availablePrices) > 1 && ! $priceType) {
+            return response()->json(['message' => 'Pilih harga Normal atau Grosir untuk link katalog.'], 422);
+        }
+        $priceType ??= $availablePrices[0] ?? null;
+        if (! $priceType || ! in_array($priceType, $availablePrices, true)) {
+            return response()->json(['message' => 'Anda tidak memiliki akses ke harga yang dipilih.'], 422);
+        }
         $token = Str::random(64);
         $search = trim((string) ($data['search'] ?? '')) ?: null;
         $share = CatalogShareLink::create([
@@ -39,6 +52,7 @@ class CatalogShareController extends Controller
             'expires_at' => $expiresAt,
             'category' => $category,
             'search' => $search,
+            'price_type' => $priceType,
         ], 201);
     }
 }

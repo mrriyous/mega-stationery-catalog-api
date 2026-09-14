@@ -86,4 +86,40 @@ class UserManagementTest extends TestCase
         ])->assertUnprocessable()
             ->assertJsonPath('message', 'Pengguna harus memiliki tepat satu akses harga: Normal atau Grosir.');
     }
+
+    public function test_sales_always_receives_both_prices_but_cannot_manage_users(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+        $response = $this->postJson('/api/users', [
+            'name' => 'Sales',
+            'username' => 'sales',
+            'password' => 'secret123',
+            'role' => 'sales',
+            'normal_price_access' => false,
+            'wholesale_price_access' => false,
+        ])->assertCreated()
+            ->assertJsonPath('data.role', 'sales')
+            ->assertJsonPath('data.normal_price_access', true)
+            ->assertJsonPath('data.wholesale_price_access', true)
+            ->assertJsonPath('data.offline_auth_version', 1);
+
+        Sanctum::actingAs(User::findOrFail($response->json('data.id')));
+        $this->getJson('/api/users')->assertForbidden();
+    }
+
+    public function test_password_change_increments_offline_auth_version(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $sales = User::factory()->create(['role' => 'sales', 'offline_auth_version' => 4]);
+        Sanctum::actingAs($admin);
+
+        $this->putJson("/api/users/{$sales->id}", [
+            'name' => $sales->name,
+            'username' => $sales->username,
+            'password' => 'new-secret',
+            'role' => 'sales',
+            'normal_price_access' => true,
+            'wholesale_price_access' => true,
+        ])->assertOk()->assertJsonPath('data.offline_auth_version', 5);
+    }
 }

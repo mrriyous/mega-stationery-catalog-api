@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'username', 'email', 'password', 'role', 'normal_price_access', 'wholesale_price_access'])]
+#[Fillable(['name', 'username', 'email', 'password', 'role', 'normal_price_access', 'wholesale_price_access', 'offline_auth_version'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -33,18 +33,23 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function isSales(): bool
+    {
+        return $this->role === 'sales';
+    }
+
     public function priceAccess(): array
     {
         return [
-            'normal_price_access' => $this->isAdmin() || $this->normal_price_access,
-            'wholesale_price_access' => $this->isAdmin() || $this->wholesale_price_access,
+            'normal_price_access' => $this->isAdmin() || $this->isSales() || $this->normal_price_access,
+            'wholesale_price_access' => $this->isAdmin() || $this->isSales() || $this->wholesale_price_access,
         ];
     }
 
     public function apiData(): array
     {
         return [
-            ...$this->only('id', 'name', 'username', 'role'),
+            ...$this->only('id', 'name', 'username', 'role', 'offline_auth_version'),
             ...$this->priceAccess(),
         ];
     }
@@ -61,6 +66,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'normal_price_access' => 'boolean',
             'wholesale_price_access' => 'boolean',
+            'offline_auth_version' => 'integer',
         ];
     }
 }
