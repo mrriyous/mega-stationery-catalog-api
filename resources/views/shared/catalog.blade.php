@@ -63,6 +63,7 @@
                     grid.innerHTML = '';
                 }
 
+
                 for (const video of payload.data) {
                     const card = document.createElement('a');
                     card.className = 'card';
@@ -70,7 +71,14 @@
                     card.innerHTML = (video.cover_url
                         ? `<img src="${esc(video.cover_url)}" alt="">`
                         : `<video src="${esc(video.preview_url)}" muted playsinline preload="metadata"></video>`)
-                        + `<span class="fade"></span><span class="info"><span class="code">${esc(video.code)}</span><span class="name">${esc(video.name)}</span><span class="price">${esc(video.price)}</span>${video.description ? `<span class="desc">${esc(video.description)}</span>` : ''}</span>`;
+                        + `
+                            <!-- <span class="fade"></span> -->
+                            <span class="info">
+                                <span class="code">${esc(video.code)}</span>
+                                <span class="name">${esc(video.name)}</span>
+                                <span class="price">${esc(video.price)}</span>
+                                ${video.description ? `<span class="desc">${esc(video.description)}</span>` : ''}
+                            </span>`;
                     grid.appendChild(card);
                 }
 
