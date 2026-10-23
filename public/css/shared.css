@@ -132,8 +132,8 @@ body {
 
 .fade {
     position: absolute;
-    inset: 25% 0 0;
-    background: linear-gradient(transparent, rgba(0, 0, 0, .55), rgba(0, 0, 0, .96));
+    inset: 85% 0 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, .30), rgba(0, 0, 0, .70))
 }
 
 .info {
