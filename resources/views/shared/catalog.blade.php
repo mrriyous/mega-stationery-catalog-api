@@ -72,7 +72,7 @@
                         ? `<img src="${esc(video.cover_url)}" alt="">`
                         : `<video src="${esc(video.preview_url)}" muted playsinline preload="metadata"></video>`)
                         + `
-                            <!-- <span class="fade"></span> -->
+                            <span class="fade"></span>
                             <span class="info">
                                 <span class="code">${esc(video.code)}</span>
                                 <span class="name">${esc(video.name)}</span>
