@@ -141,7 +141,6 @@ body {
     left: 7px;
     right: 7px;
     bottom: 7px;
-    text-shadow: 0 1px 4px #000;
 }
 
 .card .code {
@@ -166,6 +165,7 @@ body {
     margin-top: 2px;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: #AFA8E7;
 }
 
 .card .desc {
